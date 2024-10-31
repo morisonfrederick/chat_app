@@ -1,11 +1,12 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 import express, { Application } from "express";
 import cors from 'cors';
-import dotenv from 'dotenv';
 import router from "./Routes/Routes";
 import {createServer} from 'http';
 import { Server } from 'socket.io';
-import { log } from "console";
-dotenv.config();
 
 const app: Application = express();
 const server = createServer(app);
@@ -23,12 +24,22 @@ const io = new Server(server,{
   cors:corsOption
 });
 
+//store connected user and their socket id
+const connectedUser = new Map()
+
 io.on('connection', (socket) => {
   console.log('a user is connected');
   
-  socket.on('message', (msg) => {
-    console.log('msg received', msg);
-    io.emit('message', msg);
+  //register the current user to the server
+  socket.on('register',(userId)=>{
+      connectedUser.set(userId,socket.id)
+  })
+  
+  socket.on('pivate_message', ({message,reipientID,senderID}) => {
+    const recipientSocketID = connectedUser.get(reipientID)
+    if(recipientSocketID){
+      io.to(recipientSocketID).emit('private_message',{message,senderID})
+    }
   });
 
   socket.on('disconnect', () => {

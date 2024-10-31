@@ -1,9 +1,11 @@
 import mongoose,{Document} from "mongoose";
 
-interface Iuser extends Document {
+export interface Iuser extends Document {
     username:string,
     email:string,
     password:string,
+    friends:string[],
+    friendRequests:string[]
     createdAt:Date,
     updatedAt:Date
 }
@@ -20,6 +22,12 @@ const userSchema = new mongoose.Schema<Iuser>({
         password:{
             type:String,
             required:true
+        },
+        friends:{
+            type:[String]
+        },
+        friendRequests:{
+            type:[String]
         },
         createdAt:{
             type: Date,
