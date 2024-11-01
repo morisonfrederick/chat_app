@@ -35,8 +35,13 @@ io.on('connection', (socket) => {
       connectedUser.set(userId,socket.id)
   })
   
-  socket.on('pivate_message', ({message,reipientID,senderID}) => {
-    const recipientSocketID = connectedUser.get(reipientID)
+  socket.on('private_message', ({message,recipientID,senderID}) => {
+    console.log('message: ',message);
+    console.log('reipientID: ',recipientID);
+    console.log('senderID: ',senderID);
+
+    
+    const recipientSocketID = connectedUser.get(recipientID)
     if(recipientSocketID){
       io.to(recipientSocketID).emit('private_message',{message,senderID})
     }

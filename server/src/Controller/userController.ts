@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt,{JwtPayload} from 'jsonwebtoken';
 import { friendRequestArray } from '../types/types';
 
-interface CustomRequset extends Request {
+interface CustomRequest extends Request {
     user?:{
         id:string,
         email:string
@@ -94,17 +94,31 @@ async function postLogout(req:Request,res:Response):Promise<void> {
 
 }
 //function to search friends 
-async function findFrinds(req:Request,res:Response):Promise<void> {
+async function findFrinds(req:CustomRequest,res:Response):Promise<void> {
 
     try {
         console.log('find function is called');
+        const userID = req.user?.id as string
+        console.log('user id from token',userID);
+        
         
         const {search} = req.body;
-        const user = search 
+        const friends = search 
         ? await User.find({ username: { $regex: search, $options: 'i' } })
         : await User.find();
+
+        console.log('friends : ',friends);
         
-        res.status(200).json(user)
+
+
+        const filteredFriends = friends.filter((friend)=>{
+            return !friend.friends.includes(userID) && !friend.friendRequests.includes(userID) && friend._id!=userID
+        })
+        console.log('filteredFriends: ',filteredFriends);
+        
+
+    
+        res.status(200).json(filteredFriends)
     } catch (error) {
         console.log(error);
         res.status(500).json('an error occured while searching for friends')
@@ -136,9 +150,14 @@ async function sendfriendRequset(req:Request,res:Response) {
         }
         
             //checking friend request is exist in the friend request array
-        if(friend.friendRequests.includes(friendId)){
+        if(friend.friendRequests.includes(userObject.id)){
             res.status(400).json({error:'Friend request already send'})
             return;
+        }
+        // checking if already friends
+
+        if(user.friends.includes(friendId)){
+            res.status(400).json({message:" cant't send friend request to friends"})
         }
 
         //add user id to the friend request list and save
@@ -207,99 +226,114 @@ async function getFrendRequset(req:Request,res:Response){
     
 }
 //function to accept or reject the friend request
-async function manageFriendRequest(req:Request,res:Response) {
+async function manageFriendRequest(req: Request, res: Response) {
     try {
         console.log('manage friend request is called');
         
-            // destructuring the friend id and the user id and validating
-        const {friendId,userId,option} = req.body
-        console.log('friend id is : ',friendId);
-        console.log('user id is : ',userId);
-        
-        
+        // Destructure the friendId, userId, and option from the request body
+        const { friendId, userId, option } = req.body;
+        console.log('friend id is:', friendId);
+        console.log('user id is:', userId);
 
-
-        if(!friendId||!userId){
-            res.status(400).json('frindId and/or userID is missing')
-            return;
-        }
-        const user = await User.findById(userId)
-        const friend = await User.findById(friendId)
-
-        if(!user||!friend){
-            res.status(400).json('this user is no longer available')
+        // Validate required fields
+        if (!friendId || !userId) {
+            res.status(400).json({ message: 'friendId and/or userId is missing' });
             return;
         }
 
-        // handle the rejection
-        if(option==='reject'){
-                user.friendRequests= user?.friendRequests.filter((id)=>id!=friendId)
-                await user?.save()
-                console.log('new friend : ',user.friendRequests);
-                
+        // Fetch users from the database
+        const user = await User.findById(userId);
+        const friend = await User.findById(friendId);
 
-                 //retrieve all friends request from the friends array 
-                let friendsArray = await Promise.all(
-                user.friendRequests.map(async(id:string)=>{
-                    let friend = await User.findById(id)
-                    return friend;
+        if (!user || !friend) {
+            res.status(400).json({ message: 'One or both users are no longer available' });
+            return;
+        }
+
+        // Function to retrieve all friend requests as user objects
+        const getFriendRequests = async () => {
+            return Promise.all(
+                user.friendRequests.map(async (id: string) => {
+                    return await User.findById(id);
                 })
-            )
-                res.status(200).json({data:friendsArray,message:'rejected succefully'})
-                return;
+            );
+        };
+
+        if (option === 'reject') {
+            // Remove friendId from user's friend requests
+            user.friendRequests = user.friendRequests.filter(id => id !== friendId);
+            await user.save();
+            console.log('Updated friend requests:', user.friendRequests);
+
+            const friendsArray = await getFriendRequests();
+            res.status(200).json({ data: friendsArray, message: 'Rejected successfully' });
+            return;
         }
 
-        // handle friend request acceptance 
-        if(option==='accept'){
-            try {
-                //adding friend to the user's friend array
-
-            if(user&&friend){
-                user.friends.push(friendId)
-                friend.friends.push(userId)
-                await user.save()
-                await friend.save()
-
-                 //retrieve all friends request from the friends array 
-                let friendsArray = await Promise.all(
-                    user.friendRequests.map(async(id:string)=>{
-                        let friend = await User.findById(id)
-                        return friend;
-                    })
-                )
-                
-                res.status(200).json({data:friendsArray,message:'friend added successfully'})
-                return;
-        }
-                
-            } catch (error) {
-                res.status(400).json(error)
+        if (option === 'accept') {
+            // Check if friend is already in user's friends list
+            if (user.friends.includes(friendId)) {
+                res.status(400).json({ message: 'Already friends' });
                 return;
             }
+
+            // Remove friendId from friendRequests and add to friends lists
+            user.friendRequests = user.friendRequests.filter(id => id !== friendId);
+            user.friends.push(friendId);
+            friend.friends.push(userId);
+
+            await user.save();
+            await friend.save();
+            console.log('Friends updated successfully');
+
+            const friendsArray = await getFriendRequests();
+            res.status(200).json({ data: friendsArray, message: 'Friend added successfully' });
+            return;
         }
+
+        res.status(400).json({ message: 'Invalid option provided' });
     } catch (error) {
-        res.status(400).json({error})
-        return;
+        console.error('Error in manageFriendRequest:', error);
+        res.status(500).json({ message: 'Server error', error });
     }
 }
+
 
 //function to display friends 
 
-async function listFriends(req:CustomRequset,res:Response) {
+async function listFriends(req: CustomRequest, res: Response) {
     try {
-        console.log('request to get friendlist received');
-        
-        const userID = req.user?.id
-        const user = User.findById(userID)
-        console.log('list of friends for the home page');
-        
-        
+        console.log('Request to get friend list received');
+
+        // Get user ID from the request, set by the JWT middleware
+        const userID = req.user?.id;
+        const user = await User.findById(userID);
+
+        // Check if the user and friends exist
+        if (!user || !user.friends?.length) {
+             res.status(400).json('No friends found for this user');
+             return;
+            
+        }
+
+        // Make an array of friends with name and email
+        const friends = await Promise.all(
+            user.friends.map(async (id) => {
+                const friend = await User.findById(id) as Iuser;
+                return { name: friend.username, id: friend._id };
+            })
+        );
+
+        console.log('List of friends for the home page', friends);
+        res.status(200).json({ friends });
         
     } catch (error) {
-        
+        console.error(error);
+        res.status(500).json('Server error');
     }
 }
 
 
 
-export { postUser,postLogin,findFrinds,sendfriendRequset,getFrendRequset,manageFriendRequest };
+
+export { postUser,postLogin,findFrinds,sendfriendRequset,getFrendRequset,manageFriendRequest,listFriends };

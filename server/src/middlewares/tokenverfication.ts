@@ -7,7 +7,6 @@ interface CustomRequset extends Request {
 
 const  JWT_SECRET = process.env.JWT_SECRET as string
 const verifyToken = (req:CustomRequset,res:Response,next:NextFunction)=>{
-        console.log('jwt secret is ; ',JWT_SECRET);
         
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
@@ -19,7 +18,6 @@ const verifyToken = (req:CustomRequset,res:Response,next:NextFunction)=>{
 
         try {
             const decoded = jwt.verify(token,JWT_SECRET);
-            console.log('this is decoded user from the token: ',decoded);
             
             req.user = decoded;
             next()
