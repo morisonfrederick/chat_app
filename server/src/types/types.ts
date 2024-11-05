@@ -1,5 +1,5 @@
-export type friendRequestArray ={
-    email:string,
-    _id:string,
-    username:string
-}
+export type friendRequestArray = {
+  email: string;
+  _id: string;
+  username: string;
+};
