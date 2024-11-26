@@ -6,13 +6,14 @@ import cors from "cors";
 import router from "./Routes/Routes";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import path from "path";
 
 const app: Application = express();
 const server = createServer(app);
 
-// Configure CORS for the client running at http://localhost:5173
+// Configure CORS for the client running at https://social-media-app-3y61.onrender.com
 const corsOption = {
-  origin: "http://localhost:5173",
+  origin: "https://social-media-app-3y61.onrender.com",
   methods: ["GET", "POST"],
   credentials: true,
 };
@@ -27,18 +28,12 @@ const io = new Server(server, {
 const connectedUser = new Map();
 
 io.on("connection", (socket) => {
-  console.log("a user is connected");
-
   //register the current user to the server
   socket.on("register", (userId) => {
     connectedUser.set(userId, socket.id);
   });
 
   socket.on("private_message", ({ message, recipientID, senderID }) => {
-    console.log("message: ", message);
-    console.log("reipientID: ", recipientID);
-    console.log("senderID: ", senderID);
-
     const recipientSocketID = connectedUser.get(recipientID);
     if (recipientSocketID) {
       io.to(recipientSocketID).emit("private_message", { message, senderID });
@@ -52,5 +47,6 @@ io.on("connection", (socket) => {
 
 app.use(express.json());
 app.use("/", router);
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 export { app, server };

@@ -3,7 +3,8 @@ import { User, Iuser } from "../Model/userModel";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { friendRequestArray } from "../types/types";
+import fs from "fs";
+import path from "path";
 
 interface CustomRequest extends Request {
   user?: {
@@ -81,13 +82,11 @@ async function postLogin(req: Request, res: Response): Promise<void> {
     const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, {
       expiresIn: "1h",
     });
-    res
-      .status(200)
-      .json({
-        message: "user logged in successful",
-        token,
-        user: { email: user.email, id: user._id, name: user.username },
-      });
+    res.status(200).json({
+      message: "user logged in successful",
+      token,
+      user: { email: user.email, id: user._id, name: user.username },
+    });
   } catch (error) {}
 }
 
@@ -314,7 +313,7 @@ async function listFriends(req: CustomRequest, res: Response) {
     const friends = await Promise.all(
       user.friends.map(async (id) => {
         const friend = (await User.findById(id)) as Iuser;
-        return { name: friend.username, id: friend._id };
+        return { name: friend.username, id: friend._id, url: friend.imageURL };
       })
     );
 
@@ -326,6 +325,70 @@ async function listFriends(req: CustomRequest, res: Response) {
   }
 }
 
+//function to save image url in the database
+
+async function addProfilePic(req: CustomRequest, res: Response) {
+  console.log("profile pic is adding");
+
+  try {
+    const url = req.file?.filename;
+
+    if (!url) {
+      res.status(400).json({ error: "no profile pic uploaded" });
+      return;
+    }
+    console.log("user id :", req.user?.id);
+
+    let user = await User.findById(req?.user?.id);
+    if (!user) {
+      res.status(400).json({ error: "no user found " });
+      return;
+    }
+
+    // delete profile pic if already exist
+    if (user.imageURL) {
+      const filePath = path.join(__dirname, "../public/uploads", user.imageURL);
+      fs.unlink(filePath, (err) => {
+        if (err) console.log("error deleting prev profile pic : ", err);
+        else console.log("prev profile pic deleted");
+      });
+    }
+
+    console.log("profilPIC url is : ", url);
+
+    user.imageURL = url;
+    await user.save();
+    console.log(user.imageURL);
+
+    res.status(200).json({ message: "profile pic added successfully", url });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function getProfilePic(req: CustomRequest, res: Response) {
+  console.log("get profile pic");
+
+  try {
+    const id = req.user?.id;
+    if (!id) {
+      res.status(400).json({ error: "no user found" });
+      return;
+    }
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(400).json({ error: "no user found " });
+      return;
+    }
+    let profileURL = user?.imageURL;
+    res.status(200).json({ profileURL });
+    return;
+  } catch (error) {
+    res.status(500).json(error);
+    return;
+  }
+}
+
 export {
   postUser,
   postLogin,
@@ -334,4 +397,6 @@ export {
   getFrendRequset,
   manageFriendRequest,
   listFriends,
+  addProfilePic,
+  getProfilePic,
 };

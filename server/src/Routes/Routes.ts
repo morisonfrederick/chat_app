@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as user from "../Controller/userController";
 import * as admin from "../Controller/adminController";
 import verifyToken from "../middlewares/tokenverfication";
+import upload from "../middlewares/multer";
 
 const router = Router();
 
@@ -30,5 +31,13 @@ router.get("/friendlist", verifyToken, user.listFriends);
 //delete all users for test purpose
 
 router.post("/deleteusers", admin.deleteUsers);
+
+router.post(
+  "/uploads",
+  verifyToken,
+  upload.single("profilePIC"),
+  user.addProfilePic
+);
+router.get("/profile", verifyToken, user.getProfilePic);
 
 export default router;

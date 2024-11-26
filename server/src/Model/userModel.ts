@@ -6,6 +6,7 @@ export interface Iuser extends Document {
   password: string;
   friends: string[];
   friendRequests: string[];
+  imageURL: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +29,9 @@ const userSchema = new mongoose.Schema<Iuser>({
   },
   friendRequests: {
     type: [String],
+  },
+  imageURL: {
+    type: String,
   },
   createdAt: {
     type: Date,
