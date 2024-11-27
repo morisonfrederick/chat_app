@@ -16,11 +16,8 @@ interface CustomRequest extends Request {
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 async function postUser(req: Request, res: Response): Promise<void> {
-  console.log("post user request recieved");
-
   try {
     const { username, email, password } = req.body;
-    console.log(username, email, password);
 
     if (!username || !password || !email) {
       res.status(400).json({ message: "All fields are required" });
@@ -43,7 +40,6 @@ async function postUser(req: Request, res: Response): Promise<void> {
     });
 
     await newUser.save();
-    console.log(newUser);
 
     res.status(201).json({ message: "User added successfully" });
     return;
@@ -55,11 +51,8 @@ async function postUser(req: Request, res: Response): Promise<void> {
 }
 
 async function postLogin(req: Request, res: Response): Promise<void> {
-  console.log(JWT_SECRET);
-
   try {
     let { email, password } = req.body;
-    console.log(email, password);
 
     if (!email || !password) {
       res.status(400).json("all fields are required");
@@ -67,7 +60,6 @@ async function postLogin(req: Request, res: Response): Promise<void> {
     }
 
     let user = await User.findOne({ email });
-    console.log(user);
 
     if (!user) {
       res.status(400).json("no user found");
@@ -96,16 +88,12 @@ async function postLogout(req: Request, res: Response): Promise<void> {
 //function to search friends
 async function findFrinds(req: CustomRequest, res: Response): Promise<void> {
   try {
-    console.log("find function is called");
     const userID = req.user?.id as string;
-    console.log("user id from token", userID);
 
     const { search } = req.body;
     const friends = search
       ? await User.find({ username: { $regex: search, $options: "i" } })
       : await User.find();
-
-    console.log("friends : ", friends);
 
     const filteredFriends = friends.filter((friend) => {
       return (
@@ -114,7 +102,6 @@ async function findFrinds(req: CustomRequest, res: Response): Promise<void> {
         friend._id != userID
       );
     });
-    console.log("filteredFriends: ", filteredFriends);
 
     res.status(200).json(filteredFriends);
   } catch (error) {
@@ -125,8 +112,6 @@ async function findFrinds(req: CustomRequest, res: Response): Promise<void> {
 
 async function sendfriendRequset(req: Request, res: Response) {
   try {
-    console.log("trying to send friend request");
-
     //destructure and validate input
     const { friendId, userString } = req.body;
 
@@ -174,8 +159,6 @@ async function sendfriendRequset(req: Request, res: Response) {
 
 // function to display friend requests recieved from friends
 async function getFrendRequset(req: Request, res: Response) {
-  console.log("get friend request is called");
-
   try {
     //destructure and validate input
     const id = req.query.id;
@@ -217,12 +200,8 @@ async function getFrendRequset(req: Request, res: Response) {
 //function to accept or reject the friend request
 async function manageFriendRequest(req: Request, res: Response) {
   try {
-    console.log("manage friend request is called");
-
     // Destructure the friendId, userId, and option from the request body
     const { friendId, userId, option } = req.body;
-    console.log("friend id is:", friendId);
-    console.log("user id is:", userId);
 
     // Validate required fields
     if (!friendId || !userId) {
@@ -254,7 +233,6 @@ async function manageFriendRequest(req: Request, res: Response) {
       // Remove friendId from user's friend requests
       user.friendRequests = user.friendRequests.filter((id) => id !== friendId);
       await user.save();
-      console.log("Updated friend requests:", user.friendRequests);
 
       const friendsArray = await getFriendRequests();
       res
@@ -277,7 +255,6 @@ async function manageFriendRequest(req: Request, res: Response) {
 
       await user.save();
       await friend.save();
-      console.log("Friends updated successfully");
 
       const friendsArray = await getFriendRequests();
       res
@@ -297,8 +274,6 @@ async function manageFriendRequest(req: Request, res: Response) {
 
 async function listFriends(req: CustomRequest, res: Response) {
   try {
-    console.log("Request to get friend list received");
-
     // Get user ID from the request, set by the JWT middleware
     const userID = req.user?.id;
     const user = await User.findById(userID);
@@ -317,7 +292,6 @@ async function listFriends(req: CustomRequest, res: Response) {
       })
     );
 
-    console.log("List of friends for the home page", friends);
     res.status(200).json({ friends });
   } catch (error) {
     console.error(error);
@@ -328,8 +302,6 @@ async function listFriends(req: CustomRequest, res: Response) {
 //function to save image url in the database
 
 async function addProfilePic(req: CustomRequest, res: Response) {
-  console.log("profile pic is adding");
-
   try {
     const url = req.file?.filename;
 
@@ -337,7 +309,6 @@ async function addProfilePic(req: CustomRequest, res: Response) {
       res.status(400).json({ error: "no profile pic uploaded" });
       return;
     }
-    console.log("user id :", req.user?.id);
 
     let user = await User.findById(req?.user?.id);
     if (!user) {
@@ -350,15 +321,11 @@ async function addProfilePic(req: CustomRequest, res: Response) {
       const filePath = path.join(__dirname, "../public/uploads", user.imageURL);
       fs.unlink(filePath, (err) => {
         if (err) console.log("error deleting prev profile pic : ", err);
-        else console.log("prev profile pic deleted");
       });
     }
 
-    console.log("profilPIC url is : ", url);
-
     user.imageURL = url;
     await user.save();
-    console.log(user.imageURL);
 
     res.status(200).json({ message: "profile pic added successfully", url });
   } catch (error) {
@@ -367,8 +334,6 @@ async function addProfilePic(req: CustomRequest, res: Response) {
 }
 
 async function getProfilePic(req: CustomRequest, res: Response) {
-  console.log("get profile pic");
-
   try {
     const id = req.user?.id;
     if (!id) {
