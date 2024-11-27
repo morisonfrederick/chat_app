@@ -9,15 +9,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const app_1 = require("./app");
-const db_1 = require("./config/db");
-const PORT = process.env.PORT || 5000;
-app_1.server.listen(PORT, () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield (0, db_1.connectDb)();
-        console.log(`app running on:${PORT}`);
-    }
-    catch (err) {
-        console.log(err);
-    }
-}));
+exports.deleteUsers = deleteUsers;
+const userModel_1 = require("../Model/userModel");
+function deleteUsers(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const result = yield userModel_1.User.deleteMany({}); // Deletes all documents in the 'User' collection
+            res.status(200).json({ message: "All users deleted successfully", result });
+        }
+        catch (error) {
+            res.status(500).json({ message: "Failed to delete users", error });
+        }
+    });
+}

@@ -8,16 +8,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const app_1 = require("./app");
-const db_1 = require("./config/db");
-const PORT = process.env.PORT || 5000;
-app_1.server.listen(PORT, () => __awaiter(void 0, void 0, void 0, function* () {
+exports.connectDb = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const URI = process.env.MONGO_URI;
+const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
+    if (!URI) {
+        throw new Error("uri undefined");
+    }
     try {
-        yield (0, db_1.connectDb)();
-        console.log(`app running on:${PORT}`);
+        yield mongoose_1.default.connect(URI);
+        console.log(`connected to mongodb `);
     }
     catch (err) {
         console.log(err);
+        process.exit(1);
     }
-}));
+});
+exports.connectDb = connectDb;
