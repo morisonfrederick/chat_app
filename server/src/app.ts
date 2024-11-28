@@ -47,6 +47,13 @@ io.on("connection", (socket) => {
 
 app.use(express.json());
 app.use("/", router);
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Content-Type", "image/jpeg");
+    next();
+  },
+  express.static(path.join(__dirname, "public/uploads"))
+);
 
 export { app, server };
