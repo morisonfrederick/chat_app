@@ -13,7 +13,7 @@ const server = createServer(app);
 
 // Configure CORS for the client running at https://social-media-app-3y61.onrender.com
 const corsOption = {
-  origin: "https://social-media-app-3y61.onrender.com",
+  origin: "http://localhost:5176",
   methods: ["GET", "POST"],
   credentials: true,
 };

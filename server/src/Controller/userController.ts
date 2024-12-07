@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
+import { log } from "console";
 
 interface CustomRequest extends Request {
   user?: {
@@ -51,6 +52,7 @@ async function postUser(req: Request, res: Response): Promise<void> {
 }
 
 async function postLogin(req: Request, res: Response): Promise<void> {
+  log;
   try {
     let { email, password } = req.body;
 
