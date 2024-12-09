@@ -7,13 +7,16 @@ import router from "./Routes/Routes";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
+import saveMessages from "./utils/messages";
+import { set } from "mongoose";
+const ORIGIN = process.env.ORIGIN;
 
 const app: Application = express();
 const server = createServer(app);
 
 // Configure CORS for the client running at https://social-media-app-3y61.onrender.com
 const corsOption = {
-  origin: "http://localhost:5176",
+  origin: ORIGIN,
   methods: ["GET", "POST"],
   credentials: true,
 };
@@ -31,17 +34,32 @@ io.on("connection", (socket) => {
   //register the current user to the server
   socket.on("register", (userId) => {
     connectedUser.set(userId, socket.id);
+    io.emit("user_online", userId);
   });
 
   socket.on("private_message", ({ message, recipientID, senderID }) => {
+    console.log("priviate msg created");
+    saveMessages({ senderID, recipientID, message });
+
     const recipientSocketID = connectedUser.get(recipientID);
     if (recipientSocketID) {
       io.to(recipientSocketID).emit("private_message", { message, senderID });
+      console.log("calling saveMessages function");
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("user disconnected");
+    const disconnectedUsers = Array.from(connectedUser.entries()).find(
+      ([_, socketID]) => {
+        socketID === socket.id;
+      }
+    );
+    if (disconnectedUsers) {
+      const userId = disconnectedUsers[0];
+      connectedUser.delete(userId);
+      io.emit("user_offline", userId);
+      console.log(`User ${userId} is disconnected`);
+    }
   });
 });
 

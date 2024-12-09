@@ -3,6 +3,7 @@ import * as user from "../Controller/userController";
 import * as admin from "../Controller/adminController";
 import verifyToken from "../middlewares/tokenverfication";
 import upload from "../middlewares/multer";
+import retrieveMsg from "../Controller/messageController";
 
 const router = Router();
 
@@ -39,5 +40,9 @@ router.post(
   user.addProfilePic
 );
 router.get("/profile", verifyToken, user.getProfilePic);
+
+// router to retrieve saved messages
+
+router.post("/messages", verifyToken, retrieveMsg);
 
 export default router;
