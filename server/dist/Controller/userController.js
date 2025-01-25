@@ -27,6 +27,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const console_1 = require("console");
 const JWT_SECRET = process.env.JWT_SECRET;
 function postUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -61,6 +62,7 @@ function postUser(req, res) {
 }
 function postLogin(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console_1.log;
         try {
             let { email, password } = req.body;
             if (!email || !password) {

@@ -71,7 +71,7 @@ app.use(
     res.setHeader("Content-Type", "image/jpeg");
     next();
   },
-  express.static(path.join(__dirname, "public/uploads"))
+  express.static(path.join(__dirname, "/public/uploads"))
 );
 
 export { app, server };

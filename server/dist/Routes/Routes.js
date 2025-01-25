@@ -31,6 +31,7 @@ const user = __importStar(require("../Controller/userController"));
 const admin = __importStar(require("../Controller/adminController"));
 const tokenverfication_1 = __importDefault(require("../middlewares/tokenverfication"));
 const multer_1 = __importDefault(require("../middlewares/multer"));
+const messageController_1 = __importDefault(require("../Controller/messageController"));
 const router = (0, express_1.Router)();
 // Sign-up route
 router.post("/signup", user.postUser);
@@ -50,4 +51,6 @@ router.get("/friendlist", tokenverfication_1.default, user.listFriends);
 router.post("/deleteusers", admin.deleteUsers);
 router.post("/uploads", tokenverfication_1.default, multer_1.default.single("profilePIC"), user.addProfilePic);
 router.get("/profile", tokenverfication_1.default, user.getProfilePic);
+// router to retrieve saved messages
+router.post("/messages", tokenverfication_1.default, messageController_1.default);
 exports.default = router;
