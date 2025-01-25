@@ -5,7 +5,7 @@
   "main": "./src/index.ts",
   "scripts": {
     "clean": "rm -rf dist/",
-    "copy-files": "copyfiles -u 1 src/public/**/* dist/public",
+    "copy-files": "npx copyfiles -u 1 src/public/**/* dist/public",
     "prepare-uploads": "copyfiles -u 0 uploads/**/* src/public",
     "build": "npm run clean && tsc --build && npm run prepare-uploads && npm run copy-files",
     "start": "node ./dist/index.js",
