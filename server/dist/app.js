@@ -62,4 +62,4 @@ app.use("/", Routes_1.default);
 app.use("/uploads", (req, res, next) => {
     res.setHeader("Content-Type", "image/jpeg");
     next();
-}, express_1.default.static(path_1.default.join(__dirname, "../public/uploads")));
+}, express_1.default.static(path_1.default.join(__dirname, "/public/uploads")));

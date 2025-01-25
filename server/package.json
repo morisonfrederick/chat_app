@@ -4,12 +4,10 @@
   "description": "",
   "main": "./src/index.ts",
   "scripts": {
-    "clean": "npx rimraf dist/",
-    "copy-files": "copyfiles -u 1 src/public/**/* dist/public",
-    "prepare-uploads": "copyfiles -u 0 uploads/**/* src/public",
-    "build": "npm run clean && tsc --build && npm run prepare-uploads && npm run copy-files",
+    "build": "tsc --build && npm run copy-uploads",
     "start": "node ./dist/index.js",
-    "dev": "nodemon ./src/index.ts"
+    "dev": "nodemon ./src/index.ts",
+    "copy-uploads": "node ./src/scripts.js"
   },
   "keywords": [],
   "author": "",
@@ -34,6 +32,7 @@
     "@types/node": "^22.7.5",
     "@types/socket.io": "^3.0.2",
     "copyfiles": "^2.4.1",
+    "fs-extra": "^11.3.0",
     "nodemon": "^3.1.7",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
